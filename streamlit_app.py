@@ -47,7 +47,7 @@ def scrape_images(url_start):
             page_url = f"{sub_cat_link}?start={page_number * 50}"  # Assuming 50 items per page
             response_page = requests.get(page_url)
             soup_page = BeautifulSoup(response_page.text, "html.parser")
-            h1_title = soup_page.find('h1').text.strip()
+            h1_title = soup_page.find('h1').text.strip() if soup_page.find('h1') else "No title"
 
             entries = soup_page.find_all('div', class_='pg-box3')
             for entry in entries:
@@ -59,13 +59,12 @@ def scrape_images(url_start):
                         response_detail = requests.get(full_url)
                         soup_detail = BeautifulSoup(response_detail.text, "html.parser")
 
-                        desc_title = soup_detail.find('div', class_='pg-dv-desc no-popup').get_text(strip=True)
-                        desc = soup_detail.find('div', class_='pg-dv-desc no-popup').find('p').get_text(strip=True)
+                        desc_div = soup_detail.find('div', class_='pg-dv-desc no-popup')
+                        desc_title = desc_div.get_text(strip=True) if desc_div else "No description title"
+                        desc_p = desc_div.find('p') if desc_div else None
+                        desc = desc_p.get_text(strip=True) if desc_p else "No description"
                         image_tag = soup_detail.find('div', id='phocaGalleryImageBox').find('img')
-                        if image_tag and 'src' in image_tag.attrs:
-                            image_link = urljoin(url_base, image_tag['src'])
-                        else:
-                            image_link = "No image found"
+                        image_link = urljoin(url_base, image_tag['src']) if image_tag and 'src' in image_tag.attrs else "No image found"
 
                         final_data.append({
                             'Title': h1_title,
@@ -91,33 +90,9 @@ def main():
 
     # Apply theme
     if theme == "Dark":
-        st.markdown(
-            """
-            <style>
-            .css-18e3th9 {
-                background-color: #0E1117;
-                color: #FAFAFA;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        st.write('<style>body{background-color: #0E1117; color: #FAFAFA;}</style>', unsafe_allow_html=True)
     else:
-        st.markdown(
-            """
-            <style>
-            .css-18e3th9 {
-                background-color: #FAFAFA;
-                color: #0E1117;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        st.write('<style>body{background-color: #FAFAFA; color: #0E1117;}</style>', unsafe_allow_html=True)
 
     # Scrape images and display gallery
     if st.button("Scrape Images"):
