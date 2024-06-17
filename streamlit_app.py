@@ -19,7 +19,7 @@ time_sleep_max = 2
 def establish_connection(link):
     try:
         r = requests.get(link)
-        soup = BeautifulSoup(r.content, 'lxml')
+        soup = BeautifulSoup(r.content, 'html.parser')
         return soup
     except Exception as e:
         st.error(f"Connection to {link} cannot be established. Error: {e}")
