@@ -7,7 +7,6 @@ import random
 from urllib.parse import urljoin
 from PIL import Image
 from io import BytesIO
-import os
 
 # Base URL and starting point
 url_base = "https://www.lag-sb-rlp.de/"
@@ -68,7 +67,7 @@ def scrape_images(url_start):
 
         try:
             max_pages = int(soup_category.find('div', class_='counter pull-right').text.split()[-1])
-            pages_to_fetch = range(max_pages)
+            pages_to_fetch = range(min(max_pages, 2))  # Limit pages to fetch to avoid excessive data
         except Exception:
             pages_to_fetch = [0]
 
@@ -81,7 +80,7 @@ def scrape_images(url_start):
             h1_title = soup_page.find('h1').text.strip() if soup_page.find('h1') else "No title"
 
             entries = soup_page.find_all('div', class_='pg-box3')
-            for entry in entries:
+            for entry in entries[:10]:  # Limit entries per page to 10
                 entry_links = entry.find_all('a')
                 for link in entry_links:
                     href = link.get('href')
@@ -135,7 +134,7 @@ def main():
                     st.success(f"Found {len(final_data)} images")
                     displayed_count = 0
                     for data in final_data:
-                        if displayed_count >= 50:  # Limit the number of displayed images to 50
+                        if displayed_count >= 10:  # Limit the number of displayed images to 10
                             break
                         try:
                             image_response = requests.get(data['Image Link'])
