@@ -133,8 +133,17 @@ def main():
                 final_data = scrape_images(url_start)
                 if final_data:
                     st.success(f"Found {len(final_data)} images")
+                    displayed_count = 0
                     for data in final_data:
-                        st.image(data['Image Link'], caption=f"{data['Description Title']}\n{data['Description']}")
+                        if displayed_count >= 50:  # Limit the number of displayed images to 50
+                            break
+                        try:
+                            image_response = requests.get(data['Image Link'])
+                            img = Image.open(BytesIO(image_response.content))
+                            st.image(img, caption=f"{data['Description Title']}\n{data['Description']}")
+                            displayed_count += 1
+                        except Exception as e:
+                            st.error(f"Error loading image: {e}")
                 else:
                     st.warning("No images found at the provided URL.")
         else:
