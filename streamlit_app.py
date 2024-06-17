@@ -136,6 +136,8 @@ def main():
                     for data in final_data:
                         if displayed_count >= 10:  # Limit the number of displayed images to 10
                             break
+                        if data['Image Link'] == "No image found":
+                            continue
                         try:
                             image_response = requests.get(data['Image Link'])
                             img = Image.open(BytesIO(image_response.content))
