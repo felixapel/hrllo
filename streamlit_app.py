@@ -7,6 +7,7 @@ import random
 from urllib.parse import urljoin
 from PIL import Image
 from io import BytesIO
+import os
 
 # Base URL and starting point
 url_base = "https://www.lag-sb-rlp.de/"
@@ -14,14 +15,43 @@ url_base = "https://www.lag-sb-rlp.de/"
 # Maximum time to sleep between requests
 time_sleep_max = 2
 
-# Function to scrape images from a given URL
+# Function to establish connection and get BeautifulSoup object
+def establish_connection(link):
+    try:
+        r = requests.get(link)
+        soup = BeautifulSoup(r.content, 'lxml')
+        return soup
+    except Exception as e:
+        st.error(f"Connection to {link} cannot be established. Error: {e}")
+        return None
+
+# Function to save data to a file and provide download option
+def save_to_file(data, fname):
+    if data:
+        st.download_button(
+            label="Download Data",
+            data='\n'.join(data),
+            file_name=fname,
+            key="download_button",
+        )
+    else:
+        st.write("No data found.")
+
+# Function to print data on button click
+def button_print(data, statement):
+    if data:
+        if st.button(statement):
+            st.write(data)
+
+# Function to scrape images and descriptions
 def scrape_images(url_start):
-    response_start = requests.get(url_start)
-    soup = BeautifulSoup(response_start.text, "html.parser")
-    category_containers = soup.find_all('div', class_='pg-legend')
+    soup_start = establish_connection(url_start)
+    if not soup_start:
+        return []
+
+    category_containers = soup_start.find_all('div', class_='pg-legend')
 
     all_links = []
-    # Extract all category links
     for category in category_containers:
         links = category.find_all('a')
         for link in links:
@@ -31,22 +61,23 @@ def scrape_images(url_start):
                 all_links.append(full_url)
 
     final_data = []
-
-    # Process each category link
     for sub_cat_link in all_links[:2]:  # Limiting to first two for demo
-        response_category = requests.get(sub_cat_link)
-        soup_category = BeautifulSoup(response_category.text, "html.parser")
+        soup_category = establish_connection(sub_cat_link)
+        if not soup_category:
+            continue
+
         try:
             max_pages = int(soup_category.find('div', class_='counter pull-right').text.split()[-1])
             pages_to_fetch = range(max_pages)
         except Exception:
             pages_to_fetch = [0]
 
-        # Fetch each page in the category
         for page_number in pages_to_fetch:
             page_url = f"{sub_cat_link}?start={page_number * 50}"  # Assuming 50 items per page
-            response_page = requests.get(page_url)
-            soup_page = BeautifulSoup(response_page.text, "html.parser")
+            soup_page = establish_connection(page_url)
+            if not soup_page:
+                continue
+
             h1_title = soup_page.find('h1').text.strip() if soup_page.find('h1') else "No title"
 
             entries = soup_page.find_all('div', class_='pg-box3')
@@ -56,15 +87,21 @@ def scrape_images(url_start):
                     href = link.get('href')
                     if href and not href.startswith('http'):
                         full_url = urljoin(url_base, href)
-                        response_detail = requests.get(full_url)
-                        soup_detail = BeautifulSoup(response_detail.text, "html.parser")
+                        soup_detail = establish_connection(full_url)
+                        if not soup_detail:
+                            continue
 
                         desc_div = soup_detail.find('div', class_='pg-dv-desc no-popup')
                         desc_title = desc_div.get_text(strip=True) if desc_div else "No description title"
                         desc_p = desc_div.find('p') if desc_div else None
                         desc = desc_p.get_text(strip=True) if desc_p else "No description"
-                        image_tag = soup_detail.find('div', id='phocaGalleryImageBox').find('img')
-                        image_link = urljoin(url_base, image_tag['src']) if image_tag and 'src' in image_tag.attrs else "No image found"
+
+                        image_tag = soup_detail.find('div', id='phocaGalleryImageBox')
+                        image_link = "No image found"
+                        if image_tag:
+                            img = image_tag.find('img')
+                            if img and 'src' in img.attrs:
+                                image_link = urljoin(url_base, img['src'])
 
                         final_data.append({
                             'Title': h1_title,
@@ -79,46 +116,17 @@ def scrape_images(url_start):
 
 # Streamlit app
 def main():
-    # Page title
     st.title("Web Image Scraper")
 
-    # URL input box
     url_start = st.text_input("Enter the URL of the website to scrape images from:", "https://www.lag-sb-rlp.de/projekte/bildergalerie-leichte-sprache")
 
-    # Theme selection
     theme = st.selectbox("Choose theme:", ["Light", "Dark"])
 
-    # Apply theme
     if theme == "Dark":
-        st.markdown(
-            """
-            <style>
-            .css-18e3th9 {
-                background-color: #0E1117;
-                color: #FAFAFA;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        st.write('<style>body{background-color: #0E1117; color: #FAFAFA;}</style>', unsafe_allow_html=True)
     else:
-        st.markdown(
-            """
-            <style>
-            .css-18e3th9 {
-                background-color: #FAFAFA;
-                color: #0E1117;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        st.write('<style>body{background-color: #FAFAFA; color: #0E1117;}</style>', unsafe_allow_html=True)
 
-    # Scrape images and display gallery
     if st.button("Scrape Images"):
         if url_start:
             with st.spinner('Scraping images...'):
