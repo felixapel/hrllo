@@ -121,22 +121,30 @@ def main():
 
     theme = st.selectbox("Choose theme:", ["Light", "Dark"])
 
+    # Define CSS for themes
+    light_theme_css = """
+    <style>
+    .css-1d391kg {background-color: #FAFAFA; color: #0E1117;}
+    .stButton button {background-color: #5c6bc0; color: white;}
+    .reportview-container .main .block-container {background-color: #FAFAFA; color: #0E1117;}
+    .sidebar .sidebar-content {background: #FAFAFA; color: #0E1117;}
+    </style>
+    """
+
+    dark_theme_css = """
+    <style>
+    .css-1d391kg {background-color: #0E1117; color: #FAFAFA;}
+    .stButton button {background-color: #5c6bc0; color: white;}
+    .reportview-container .main .block-container {background-color: #0E1117; color: #FAFAFA;}
+    .sidebar .sidebar-content {background: #0E1117; color: #FAFAFA;}
+    </style>
+    """
+
+    # Apply selected theme
     if theme == "Dark":
-        st.markdown(
-            """
-            <style>
-            .css-1d391kg {background-color: #0E1117; color: #FAFAFA;}
-            .stButton button {background-color: #5c6bc0; color: white;}
-            </style>
-            """, unsafe_allow_html=True)
+        st.markdown(dark_theme_css, unsafe_allow_html=True)
     else:
-        st.markdown(
-            """
-            <style>
-            .css-1d391kg {background-color: #FAFAFA; color: #0E1117;}
-            .stButton button {background-color: #5c6bc0; color: white;}
-            </style>
-            """, unsafe_allow_html=True)
+        st.markdown(light_theme_css, unsafe_allow_html=True)
 
     if st.button("Scrape Images"):
         if url_start:
