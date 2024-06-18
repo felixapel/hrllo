@@ -131,12 +131,13 @@ def scrape_images(url_start, num_images):
 def create_mosaic_gallery(image_data):
     images_html = ""
     for data in image_data:
-        images_html += f"""
-        <div class="gallery-item">
-            <img src="{data['Image Link']}" alt="{data['Description Title']}" title="{data['Description']}" />
-            <div class="desc">{data['Description Title']}</div>
-        </div>
-        """
+        if data['Image Link'] != "No image found":
+            images_html += f"""
+            <div class="gallery-item">
+                <img src="{data['Image Link']}" alt="{data['Description Title']}" title="{data['Description']}" />
+                <div class="desc">{data['Description Title']}</div>
+            </div>
+            """
     gallery_css = """
     <style>
     .gallery {
