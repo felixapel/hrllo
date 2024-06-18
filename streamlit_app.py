@@ -122,9 +122,21 @@ def main():
     theme = st.selectbox("Choose theme:", ["Light", "Dark"])
 
     if theme == "Dark":
-        st.write('<style>body{background-color: #0E1117; color: #FAFAFA;}</style>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+            .css-1d391kg {background-color: #0E1117; color: #FAFAFA;}
+            .stButton button {background-color: #5c6bc0; color: white;}
+            </style>
+            """, unsafe_allow_html=True)
     else:
-        st.write('<style>body{background-color: #FAFAFA; color: #0E1117;}</style>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+            .css-1d391kg {background-color: #FAFAFA; color: #0E1117;}
+            .stButton button {background-color: #5c6bc0; color: white;}
+            </style>
+            """, unsafe_allow_html=True)
 
     if st.button("Scrape Images"):
         if url_start:
