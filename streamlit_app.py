@@ -7,6 +7,7 @@ import random
 from urllib.parse import urljoin
 from PIL import Image
 from io import BytesIO
+from itertools import cycle
 
 # Base URL and starting point
 url_base = "https://www.lag-sb-rlp.de/"
@@ -126,6 +127,42 @@ def scrape_images(url_start, num_images):
 
     return final_data
 
+# Function to create a mosaic gallery
+def create_mosaic_gallery(image_data):
+    images_html = ""
+    for data in image_data:
+        images_html += f"""
+        <div class="gallery-item">
+            <img src="{data['Image Link']}" alt="{data['Description Title']}" title="{data['Description']}" />
+            <div class="desc">{data['Description Title']}</div>
+        </div>
+        """
+    gallery_css = """
+    <style>
+    .gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .gallery-item {
+        flex: 1 0 21%; /* Adjust the percentage to control the number of items per row */
+        box-sizing: border-box;
+        padding: 5px;
+        border: 1px solid #ddd;
+    }
+    .gallery-item img {
+        width: 100%;
+        height: auto;
+    }
+    .gallery-item .desc {
+        text-align: center;
+        padding: 5px;
+    }
+    </style>
+    """
+    st.markdown(gallery_css, unsafe_allow_html=True)
+    st.markdown(f'<div class="gallery">{images_html}</div>', unsafe_allow_html=True)
+
 # Streamlit app
 def main():
     st.title("Web Image Scraper")
@@ -139,16 +176,7 @@ def main():
                 final_data = scrape_images(url_start, num_images)
                 if final_data:
                     st.success(f"Found {len(final_data)} images")
-                    for data in final_data:
-                        if data['Image Link'] != "No image found":
-                            try:
-                                image_response = requests.get(data['Image Link'])
-                                img = Image.open(BytesIO(image_response.content))
-                                st.image(img, caption=f"{data['Description Title']}\n{data['Description']}")
-                            except Exception as e:
-                                st.error(f"Error loading image: {e}")
-                        else:
-                            st.warning(f"Image not found for: {data['Description Title']}\n{data['Description']}")
+                    create_mosaic_gallery(final_data)
                 else:
                     st.warning("No images found at the provided URL.")
         else:
