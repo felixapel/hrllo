@@ -160,7 +160,7 @@ def create_mosaic_gallery(image_data):
     }
     </style>
     """
-    st.components.v1.html(f"{gallery_css}<div class='gallery'>{images_html}</div>", height=600)
+    st.components.v1.html(f"{gallery_css}<div class='gallery'>{images_html}</div>", height=600, scrolling=True)
 
 # Streamlit app
 def main():
