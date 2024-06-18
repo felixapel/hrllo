@@ -119,47 +119,6 @@ def main():
 
     url_start = st.text_input("Enter the URL of the website to scrape images from:", "https://www.lag-sb-rlp.de/projekte/bildergalerie-leichte-sprache")
 
-    theme = st.selectbox("Choose theme:", ["Light", "Dark"])
-
-    # Define CSS for themes
-    light_theme_css = """
-    <style>
-    body {
-        background-color: #FAFAFA;
-        color: #0E1117;
-    }
-    .stButton>button {
-        background-color: #5c6bc0;
-        color: white;
-    }
-    .stTextInput>div>div>input {
-        color: #0E1117;
-    }
-    </style>
-    """
-
-    dark_theme_css = """
-    <style>
-    body {
-        background-color: #0E1117;
-        color: #FAFAFA;
-    }
-    .stButton>button {
-        background-color: #5c6bc0;
-        color: white;
-    }
-    .stTextInput>div>div>input {
-        color: #FAFAFA;
-    }
-    </style>
-    """
-
-    # Apply selected theme
-    if theme == "Dark":
-        st.markdown(dark_theme_css, unsafe_allow_html=True)
-    else:
-        st.markdown(light_theme_css, unsafe_allow_html=True)
-
     if st.button("Scrape Images"):
         if url_start:
             with st.spinner('Scraping images...'):
