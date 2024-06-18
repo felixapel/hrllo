@@ -124,19 +124,33 @@ def main():
     # Define CSS for themes
     light_theme_css = """
     <style>
-    .css-1d391kg {background-color: #FAFAFA; color: #0E1117;}
-    .stButton button {background-color: #5c6bc0; color: white;}
-    .reportview-container .main .block-container {background-color: #FAFAFA; color: #0E1117;}
-    .sidebar .sidebar-content {background: #FAFAFA; color: #0E1117;}
+    body {
+        background-color: #FAFAFA;
+        color: #0E1117;
+    }
+    .stButton>button {
+        background-color: #5c6bc0;
+        color: white;
+    }
+    .stTextInput>div>div>input {
+        color: #0E1117;
+    }
     </style>
     """
 
     dark_theme_css = """
     <style>
-    .css-1d391kg {background-color: #0E1117; color: #FAFAFA;}
-    .stButton button {background-color: #5c6bc0; color: white;}
-    .reportview-container .main .block-container {background-color: #0E1117; color: #FAFAFA;}
-    .sidebar .sidebar-content {background: #0E1117; color: #FAFAFA;}
+    body {
+        background-color: #0E1117;
+        color: #FAFAFA;
+    }
+    .stButton>button {
+        background-color: #5c6bc0;
+        color: white;
+    }
+    .stTextInput>div>div>input {
+        color: #FAFAFA;
+    }
     </style>
     """
 
