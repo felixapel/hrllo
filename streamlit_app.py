@@ -120,6 +120,8 @@ def scrape_images(url_start, num_images):
                             'Image Link': image_link
                         })
                         image_count += 1
+                        if image_count >= num_images:  # Check if we have enough images
+                            return final_data
                         time.sleep(random.uniform(1, time_sleep_max))  # Random sleep to avoid being blocked
 
     return final_data
