@@ -60,6 +60,7 @@ def scrape_images(url_start, num_images):
                 all_links.append(full_url)
 
     final_data = []
+    image_count = 0
     for sub_cat_link in all_links[:2]:  # Limiting to first two for demo
         soup_category = establish_connection(sub_cat_link)
         if not soup_category:
@@ -72,6 +73,9 @@ def scrape_images(url_start, num_images):
             pages_to_fetch = [0]
 
         for page_number in pages_to_fetch:
+            if image_count >= num_images:  # Check if we have enough images
+                break
+
             page_url = f"{sub_cat_link}?start={page_number * 50}"  # Assuming 50 items per page
             soup_page = establish_connection(page_url)
             if not soup_page:
@@ -81,10 +85,14 @@ def scrape_images(url_start, num_images):
 
             entries = soup_page.find_all('div', class_='pg-box3')
             for entry in entries:  # No limit here, we will handle the limit outside
+                if image_count >= num_images:  # Check if we have enough images
+                    break
+
                 entry_links = entry.find_all('a')
                 for link in entry_links:
-                    if len(final_data) >= num_images:  # Stop if we have enough images
-                        return final_data
+                    if image_count >= num_images:  # Check if we have enough images
+                        break
+
                     href = link.get('href')
                     if href and not href.startswith('http'):
                         full_url = urljoin(url_base, href)
@@ -111,6 +119,7 @@ def scrape_images(url_start, num_images):
                             'Link': full_url,
                             'Image Link': image_link
                         })
+                        image_count += 1
                         time.sleep(random.uniform(1, time_sleep_max))  # Random sleep to avoid being blocked
 
     return final_data
@@ -128,19 +137,16 @@ def main():
                 final_data = scrape_images(url_start, num_images)
                 if final_data:
                     st.success(f"Found {len(final_data)} images")
-                    displayed_count = 0
                     for data in final_data:
-                        if displayed_count >= num_images:  # Limit the number of displayed images
-                            break
-                        if data['Image Link'] == "No image found":
-                            continue
-                        try:
-                            image_response = requests.get(data['Image Link'])
-                            img = Image.open(BytesIO(image_response.content))
-                            st.image(img, caption=f"{data['Description Title']}\n{data['Description']}")
-                            displayed_count += 1
-                        except Exception as e:
-                            st.error(f"Error loading image: {e}")
+                        if data['Image Link'] != "No image found":
+                            try:
+                                image_response = requests.get(data['Image Link'])
+                                img = Image.open(BytesIO(image_response.content))
+                                st.image(img, caption=f"{data['Description Title']}\n{data['Description']}")
+                            except Exception as e:
+                                st.error(f"Error loading image: {e}")
+                        else:
+                            st.warning(f"Image not found for: {data['Description Title']}\n{data['Description']}")
                 else:
                     st.warning("No images found at the provided URL.")
         else:
