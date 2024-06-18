@@ -7,7 +7,6 @@ import random
 from urllib.parse import urljoin
 from PIL import Image
 from io import BytesIO
-from itertools import cycle
 
 # Base URL and starting point
 url_base = "https://www.lag-sb-rlp.de/"
@@ -161,8 +160,7 @@ def create_mosaic_gallery(image_data):
     }
     </style>
     """
-    st.markdown(gallery_css, unsafe_allow_html=True)
-    st.markdown(f'<div class="gallery">{images_html}</div>', unsafe_allow_html=True)
+    st.components.v1.html(f"{gallery_css}<div class='gallery'>{images_html}</div>", height=600)
 
 # Streamlit app
 def main():
