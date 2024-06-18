@@ -43,7 +43,7 @@ def button_print(data, statement):
             st.write(data)
 
 # Function to scrape images and descriptions
-def scrape_images(url_start):
+def scrape_images(url_start, num_images):
     soup_start = establish_connection(url_start)
     if not soup_start:
         return []
@@ -80,9 +80,11 @@ def scrape_images(url_start):
             h1_title = soup_page.find('h1').text.strip() if soup_page.find('h1') else "No title"
 
             entries = soup_page.find_all('div', class_='pg-box3')
-            for entry in entries[:10]:  # Limit entries per page to 10
+            for entry in entries:  # No limit here, we will handle the limit outside
                 entry_links = entry.find_all('a')
                 for link in entry_links:
+                    if len(final_data) >= num_images:  # Stop if we have enough images
+                        return final_data
                     href = link.get('href')
                     if href and not href.startswith('http'):
                         full_url = urljoin(url_base, href)
@@ -118,16 +120,17 @@ def main():
     st.title("Web Image Scraper")
 
     url_start = st.text_input("Enter the URL of the website to scrape images from:", "https://www.lag-sb-rlp.de/projekte/bildergalerie-leichte-sprache")
+    num_images = st.number_input("Enter the number of images to scrape:", min_value=1, max_value=100, value=10)
 
     if st.button("Scrape Images"):
         if url_start:
             with st.spinner('Scraping images...'):
-                final_data = scrape_images(url_start)
+                final_data = scrape_images(url_start, num_images)
                 if final_data:
                     st.success(f"Found {len(final_data)} images")
                     displayed_count = 0
                     for data in final_data:
-                        if displayed_count >= 10:  # Limit the number of displayed images to 10
+                        if displayed_count >= num_images:  # Limit the number of displayed images
                             break
                         if data['Image Link'] == "No image found":
                             continue
