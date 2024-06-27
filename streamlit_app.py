@@ -1,67 +1,83 @@
 import streamlit as st
-from scrapper import scrape_images  # Import the scrape_images function
 from PIL import Image
 from io import BytesIO
 import requests
+from image_scrapper import ImageScrapper
 
-# Streamlit app
-def main():
-    st.title("Web Image Scraper")
-
-    url_start = st.text_input("Enter the URL of the website to scrape images from:", "https://www.lag-sb-rlp.de/projekte/bildergalerie-leichte-sprache")
-
-    theme = st.selectbox("Choose theme:", ["Light", "Dark"])
+# Function to apply theme and font size dynamically
+def apply_custom_styles(font_size, theme):
+    custom_css = f"""
+    <style>
+    html, body, [class*="css"] {{
+        font-size: {font_size}px !important;
+    }}
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
 
     if theme == "Dark":
         st.markdown(
             """
             <style>
-            .css-18e3th9 {
-                background-color: #0E1117;
-                color: #FAFAFA;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
+            .css-1d391kg, .css-1fv8s86, .css-14xtw13, .css-2trqyj { background-color: #0E1117; color: #FAFAFA; }
             </style>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
     else:
         st.markdown(
             """
             <style>
-            .css-18e3th9 {
-                background-color: #FAFAFA;
-                color: #0E1117;
-            }
-            .stButton button {
-                background-color: #5c6bc0;
-                color: white;
-            }
+            .css-1d391kg, .css-1fv8s86, .css-14xtw13, .css-2trqyj { background-color: #FFFFFF; color: #262730; }
             </style>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
+
+# Streamlit app
+def main():
+    st.set_page_config(
+        page_title="Web Image Scraper",
+        page_icon="🖼️",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+
+    st.title("Web Image Scraper")
+
+    # Sidebar settings
+    with st.sidebar:
+        url_start = st.text_input("Enter the URL of the website to scrape images from:")
+        num_images = st.number_input("Number of images to display (up to the specified number):", min_value=1, max_value=100, value=10)
+        theme = st.selectbox("Choose theme:", ["Light", "Dark"])
+        font_size = st.slider("Select font size:", 12, 24, 16)
+
+    # Apply the custom styles
+    apply_custom_styles(font_size, theme)
 
     if st.button("Scrape Images"):
         if url_start:
             with st.spinner('Scraping images...'):
-                final_data = scrape_images(url_start)
-                if final_data:
-                    st.success(f"Found {len(final_data)} images")
-                    displayed_count = 0
-                    for data in final_data:
-                        if displayed_count >= 10:  # Limit the number of displayed images to 10
-                            break
-                        if data['Image Link'] == "No image found":
-                            continue
-                        try:
-                            image_response = requests.get(data['Image Link'])
-                            img = Image.open(BytesIO(image_response.content))
-                            st.image(img, caption=f"{data['Description Title']}\n{data['Description']}")
-                            displayed_count += 1
-                        except Exception as e:
-                            st.error(f"Error loading image: {e}")
-                else:
-                    st.warning("No images found at the provided URL.")
+                try:
+                    images_data = ImageScrapper.all_image_from_url(url_start)
+                    if images_data:
+                        st.success(f"Found {len(images_data)} images")
+                        images_displayed = 0
+                        for img in images_data:
+                            if images_displayed >= num_images:
+                                break
+                            try:
+                                img_bytes = BytesIO(img["img_data"])
+                                image = Image.open(img_bytes)
+                                st.image(image, caption=img["img_desc"], width=200)
+                                st.markdown(f"[Download Image]({img['img_url']})")
+                                images_displayed += 1
+                            except Exception as e:
+                                st.warning(f"Error displaying image: {e}")
+                    else:
+                        st.warning("No images found at the provided URL.")
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
         else:
             st.error("Please enter a valid URL.")
 
